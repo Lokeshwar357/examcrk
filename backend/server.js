@@ -19,9 +19,20 @@ connectDB();
 // ── Security Middleware ─────────────────────────────────────
 app.use(helmet());
 
+// ✅ FIXED CORS — allows Vercel frontend cross-domain
 app.use(
   cors({
-    origin: [process.env.FRONTEND_URL || "http://localhost:3000"],
+    origin: function (origin, callback) {
+      const allowed = [
+        "https://examcrk.vercel.app",
+        process.env.FRONTEND_URL,
+      ].filter(Boolean);
+      if (!origin || allowed.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -64,18 +75,11 @@ const authLimiter = rateLimit({
 
 // ── Health Route ────────────────────────────────────────────
 app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "ExamCRK backend running",
-  });
+  res.json({ success: true, message: "ExamCRK backend running" });
 });
 
 app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    message: "ExamCRK API running",
-    timestamp: new Date(),
-  });
+  res.json({ success: true, message: "ExamCRK API running", timestamp: new Date() });
 });
 
 // ── API Routes ──────────────────────────────────────────────
@@ -85,16 +89,12 @@ app.use("/api/user", userRoutes);
 
 // ── 404 Handler ─────────────────────────────────────────────
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
-  });
+  res.status(404).json({ success: false, message: "Route not found" });
 });
 
 // ── Global Error Handler ────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error("Global error:", err.stack);
-
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Internal server error",
@@ -104,7 +104,6 @@ app.use((err, req, res, next) => {
 
 // ── Start Server ────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
   console.log(`🚀 ExamCRK backend running on port ${PORT}`);
 });
