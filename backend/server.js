@@ -19,6 +19,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
   "https://examcrk.vercel.app",
+  "https://examcrk-hpjuzg94e-lokeshwar357s-projects.vercel.app",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
@@ -26,7 +27,10 @@ const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    const isVercelPreview =
+      /^https:\/\/examcrk-[a-z0-9-]+-lokeshwar357s-projects\.vercel\.app$/.test(origin);
+
+    if (allowedOrigins.includes(origin) || isVercelPreview) {
       return callback(null, true);
     }
 
